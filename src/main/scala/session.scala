@@ -17,23 +17,25 @@ class Session(pool: ActorRef, cfg: Config)(implicit sys: ActorSystem) {
   import apollo.protocol._
   import apollo.net.ConnectionRequest
 
-  implicit val timeout = Timeout(5 seconds)
+  implicit val timeout = Timeout(30 seconds)
   implicit val ec = sys.dispatcher
 
   private def connection() = 
     (pool ? ConnectionRequest).mapTo[ActorRef]
 
+  /** Receive the options that the Cassandra cluster can handle
+    * @return Future of the query result
+    */ 
   def options(): Future[Supported] =
     for { 
       con <- connection()
       frame <- (con ? Options.toFrame).mapTo[Frame]
-    } yield frame.mapTo[Supported]
+    } yield frame.toResponseType[Supported]
 
-  def execute(query: String): Future[Map[String, Vector[String]]] = {
+  def execute(query: String): Future[Frame] =
     for {
       con <- connection()
-      frame <- (con ? Options.toFrame).mapTo[Frame]
-    } yield BodyReader.getMultiMap(frame.body)._1
+      frame <- (con ? Query(query).toFrame).mapTo[Frame]
+    } yield frame
 
-  }
 }

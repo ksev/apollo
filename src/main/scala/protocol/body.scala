@@ -176,4 +176,7 @@ object BodyWriter {
     }
   }
 
+  def putByte(bsb: ByteStringBuilder, value: Byte) = 
+    bsb.putByte(value)
+
 }

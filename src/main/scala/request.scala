@@ -32,6 +32,24 @@ case class Startup(cqlVersion: String) extends Request {
          , Opcode.STARTUP
          , bsb.result() )
   }
-    
+
+}
+
+case class Query(query: String, consistency: Short = Consistency.ONE, flags: Byte = 0) extends Request {
+
+  def toFrame = {
+    val bsb = new ByteStringBuilder()
+
+    BodyWriter.putLongString(bsb, query)
+    BodyWriter.putShort(bsb, consistency)
+    BodyWriter.putByte(bsb, flags)
+
+    Frame( Version.V2REQUEST
+         , Flags.NONE
+         , 0
+         , Opcode.QUERY
+         , bsb.result() )
+
+  }
 
 }

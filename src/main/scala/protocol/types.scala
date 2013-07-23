@@ -11,6 +11,14 @@ object Flags {
   final val TRACING     = 0x02.toByte
 }
 
+object QueryFlags {
+  final val NONE              = 0x00.toByte
+  final val PAGE_SIZE         = 0x01.toByte
+  final val VALUES            = 0x02.toByte
+  final val SKIP_METADATA     = 0x04.toByte
+  final val WITH_PAGING_STATE = 0x08.toByte
+}
+
 object Opcode {
   final val ERROR           = 0x00.toByte
   final val STARTUP         = 0x01.toByte
@@ -28,8 +36,6 @@ object Opcode {
   final val AUTH_RESPONSE   = 0x0F.toByte
   final val AUTH_SUCCESS    = 0x10.toByte
 }
-
-
 
 object Consistency {
   final val ANY           = 0x0000.toShort

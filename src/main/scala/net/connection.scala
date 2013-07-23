@@ -83,7 +83,6 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
       log.info("Frame response (opcode: {}, stream: {})", frame.opcode, frame.stream)
 
       strmMap.remove(frame.stream) ! frame
-      log.info("Removed from map")
 
       if (!waiting.isEmpty) {
         val (frm, ref) = waiting.dequeue()
@@ -99,8 +98,6 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
     case _: ConnectionClosed =>
       context stop self
 
-    case a => log.info("{}", a)
-
   }
 
   // Limbo state when the socket is connected but the client is not initiated yet
@@ -114,7 +111,7 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
           socket ! Write(Startup(map("CQL_VERSION").head).toFrame.toByteString)
 
         case Ready =>
-          context.become(connected(socket))
+          context become connected(socket)
           pool ! Connected
 
       }
@@ -128,7 +125,7 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
       context stop self
 
     // The socket has connected
-    // Time to send start up (options if CQL version is set to automatic)
+    // Time to send startup (options if CQL version is set to automatic)
     case c: Connected =>
       log.info("Cassandra connected")
       sender ! Register(self)
@@ -138,8 +135,7 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
 
       // If the version is auto we have to ask the server for the correct version
       if (v == "auto") sender ! Write(Options.toFrame.toByteString)
-      else {}
-
+      else sender ! Write(Startup(cqlVersion = v).toFrame.toByteString)
 
   }
 

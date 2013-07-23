@@ -39,11 +39,10 @@ case class Frame(
 
       case READY => Ready
 
-
     }
   }
 
-  def mapTo[T <: Response]: T =
+  def toResponseType[T <: Response]: T =
     toResponse.asInstanceOf[T]
 
 }
