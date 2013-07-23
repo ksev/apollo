@@ -16,13 +16,13 @@ class ConnectionPool(minConnections: Int, maxConnections: Int, cfg: Config) exte
   import akka.io.Tcp._
 
   val log = Logging(context.system, this)
-  val addr = new InetSocketAddress(cfg.getString("apollo.hostname"), cfg.getInt("apollo.port"))
+  val addr = new InetSocketAddress(cfg.getString("hostname"), cfg.getInt("port"))
 
   val connections = scala.collection.mutable.Queue.empty[ActorRef]
   val waiting = scala.collection.mutable.Queue.empty[ActorRef] 
 
   def makeConnection(i: Int) = {
-    val ref = context.system.actorOf(Props(classOf[Connection], addr, self), s"apollo-connection")
+    val ref = context.system.actorOf(Props(classOf[Connection], addr, self, cfg), "apollo-connection")
     context.watch(ref)
     ref
   }

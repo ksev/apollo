@@ -22,8 +22,7 @@ class ClusterTests extends FunSuite with BeforeAndAfterAll {
     val cluster = new Cluster(cfg)
     val s = cluster.session()
 
-    val f = s.execute("")
-    println(Await.result(f, 1 minutes))
+    println(Await.result(s.options(), 5 seconds))
 
   }
 

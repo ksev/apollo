@@ -2,6 +2,8 @@ package apollo.protocol
 
 import akka.util.{ ByteString, ByteStringBuilder }
 
+import apollo._
+
 case class Frame(
   version: Byte,
   flags: Byte,
@@ -25,6 +27,25 @@ case class Frame(
     builder.result()
   }
 
+  def toResponse: Response = {
+    assert(version == Version.V2RESPONSE)
+
+    import apollo.protocol.Opcode._
+
+    opcode match {
+      
+      case SUPPORTED => 
+        Supported(BodyReader.getMultiMap(body)._1)
+
+      case READY => Ready
+
+
+    }
+  }
+
+  def mapTo[T <: Response]: T =
+    toResponse.asInstanceOf[T]
+
 }
 
 object Frame {
@@ -47,3 +68,4 @@ object Frame {
   }
 
 }
+
