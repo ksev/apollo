@@ -2,7 +2,7 @@ import org.scalatest.{ FunSuite, BeforeAndAfterAll }
 
 import akka.util.{ ByteString, ByteStringBuilder }
 
-import apollo._
+import apollo.protocol._
 
 class BodyBuilderTests extends FunSuite {
 

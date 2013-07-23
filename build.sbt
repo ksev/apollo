@@ -4,6 +4,12 @@ version := "0.0.0"
 
 scalaVersion := "2.10.2"
 
+scalacOptions ++= Seq(
+    "-feature", 
+    "-deprecation",
+    "-language:postfixOps"
+)
+
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.2.0",
     "com.typesafe" % "config" % "1.0.2",
