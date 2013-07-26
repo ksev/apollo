@@ -26,7 +26,12 @@ class ClusterTests extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Test 2") {
-    val f = session.execute("USE system;")
+    //val f = session.execute("USE system;")
+
+    //session.execute("query")
+    val f = session.use("system")
+
+    //preparedQuery
 
     println(Await.result(f, 2 seconds))
   }

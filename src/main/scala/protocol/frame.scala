@@ -39,6 +39,22 @@ case class Frame(
 
       case READY => Ready
 
+      case RESULT => 
+        val (t, b) = BodyReader.getInt(body)
+        t match {
+          
+          case 0x0003 => SetKeyspace(BodyReader.getString(b)._1)
+
+          case _ => throw new Exception("Check for something")
+
+        }
+
+      case ERROR =>
+        val (err, bs) = BodyReader.getInt(body)
+        val (str, _) = BodyReader.getString(bs)
+
+        apollo.Error(err, str)
+
     }
   }
 
@@ -59,11 +75,11 @@ object Frame {
     val length = bf.getInt()
     val body = bs.slice(8, length + 8)
 
-    new Frame( version
-             , flags
-             , stream
-             , opcode
-             , body )
+    Frame( version
+         , flags
+         , stream
+         , opcode
+         , body )
   }
 
 }
