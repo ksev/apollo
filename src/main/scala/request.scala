@@ -1,10 +1,17 @@
 package apollo
 
+import scala.concurrent.Future
+
 import apollo.protocol._
 
 import akka.util.{ ByteString, ByteStringBuilder }
 
-case class CassandraValue[T](value: T, marshal: CassandraMarshal[T])
+case class CassandraValue[T](value: T, marshal: CassandraMarshal[T]) {
+
+  def put(bsb: ByteStringBuilder) = marshal.put(bsb, value)
+
+}
+
 object CassandraValue {
 
   implicit def valueToCassandraValue[T: CassandraMarshal](value: T) =
@@ -98,7 +105,7 @@ case class ParamQueryBounded(
     BodyWriter.putByte(bsb, (flags | QueryFlags.VALUES).toByte)
     BodyWriter.putShort(bsb, params.length.toShort)
     
-    BodyWriter.putBytes(bsb, Some(ByteString("system", ("UTF-8"))))
+    params foreach (_.put(bsb))
 
     Frame( Version.V2REQUEST
          , Flags.NONE
@@ -107,4 +114,59 @@ case class ParamQueryBounded(
          , bsb.result() )
   }
    
+}
+
+case class PreparedQueryUnbounded(
+  query: String, 
+  consistency: Short = Consistency.ONE, 
+  flags: Byte = 0,
+  pageSize: Option[Int] = None) {
+
+  def apply(params: CassandraValue[_]*): Future[PreparedQueryBounded] = {
+    val p = PreparedQueryBounded( query
+                     , params
+                     , consistency
+                     , flags
+                     , pageSize )
+    Future.successful(p)
+  }
+
+}
+
+case class PreparedQueryBounded(
+  query: String,
+  params: Seq[CassandraValue[_]],
+  consistency: Short = Consistency.ONE,
+  flags: Byte = 0,
+  pageSize: Option[Int] = None)
+  extends Request {
+
+  def toFrame = {
+    val bsb = new ByteStringBuilder()
+
+    BodyWriter.putLongString(bsb, query)
+    BodyWriter.putShort(bsb, consistency)
+    BodyWriter.putByte(bsb, (flags | QueryFlags.VALUES).toByte)
+    BodyWriter.putShort(bsb, params.length.toShort)
+    
+    params foreach (_.put(bsb))
+
+    Frame( Version.V2REQUEST
+         , Flags.NONE
+         , 0
+         , Opcode.QUERY
+         , bsb.result() )
+  }
+   
+}
+
+object PreparedStatement {
+
+  implicit class CQLHelper(val sc: StringContext) extends AnyVal {
+
+    def cql(params: CassandraValue[_]*): Future[PreparedQueryBounded] =
+      PreparedQueryUnbounded(sc.parts.mkString("?"))(params : _*)
+
+  }
+
 }

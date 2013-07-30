@@ -27,39 +27,10 @@ case class Frame(
     builder.result()
   }
 
-  def toResponse: Response = {
+  def toResponse[T : ResponseReader]: T = {
     assert(version == Version.V2RESPONSE)
-
-    import apollo.protocol.Opcode._
-
-    opcode match {
-      
-      case SUPPORTED => 
-        Supported(BodyReader.getMultiMap(body)._1)
-
-      case READY => Ready
-
-      case RESULT => 
-        val (t, b) = BodyReader.getInt(body)
-        t match {
-          
-          case 0x0003 => SetKeyspace(BodyReader.getString(b)._1)
-
-          case _ => throw new Exception("Check for something")
-
-        }
-
-      case ERROR =>
-        val (err, bs) = BodyReader.getInt(body)
-        val (str, _) = BodyReader.getString(bs)
-
-        apollo.Error(err, str)
-
-    }
+    implicitly[ResponseReader[T]].read(this)
   }
-
-  def toResponseType[T <: Response]: T =
-    toResponse.asInstanceOf[T]
 
 }
 

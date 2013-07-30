@@ -63,7 +63,6 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
     // save the senders ref in the map so we know who to send to on response
     case frame: Frame => 
       assert(frame.version == Version.V2REQUEST)
-
       if (!strmMap.isFull) {
         val nr = strmMap.add(sender)
         log.info("Frame request (opcode: {}, stream: {})", frame.opcode, nr)
@@ -105,12 +104,26 @@ class Connection(addr: InetSocketAddress, pool: ActorRef, cfg: Config) extends A
 
     // We received something
     case Received(data: ByteString) =>
-      Frame.fromByteString(data).toResponse match {
-  
-        case Supported(map) =>
+      import apollo.protocol.Opcode
+
+      val frame = Frame.fromByteString(data)
+      frame.opcode match {
+      
+        case Opcode.SUPPORTED =>
+          val map = implicitly[ResponseReader[Supported]].read(frame).value
           socket ! Write(Startup(map("CQL_VERSION").head).toFrame.toByteString)
 
-        case Ready =>
+        case Opcode.READY =>
+          // We have implicit keyspace config
+          if (cfg.hasPath("keyspace")) { 
+            val keyspace = cfg.getString("keyspace")
+            socket ! Write(RawQuery(s"USE $keyspace").toFrame.toByteString)
+          } else {
+            context become connected(socket)
+            pool ! Connected
+          }
+
+        case Opcode.RESULT => // The only result we get here is set key space
           context become connected(socket)
           pool ! Connected
 

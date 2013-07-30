@@ -47,3 +47,11 @@ object Consistency {
   final val LOCAL_QUORUM  = 0x0006.toShort
   final val EACH_QUORUM   = 0x0007.toShort
 }
+
+object ResultTypes {
+  final val VOID          = 0x0001
+  final val ROWS          = 0x0002
+  final val SETKEYSPACE   = 0x0003
+  final val PREPARED      = 0x0004
+  final val SCHEMACHANGE  = 0x0005 
+}

@@ -1,6 +1,8 @@
 package apollo
 
-import akka.util.ByteStringBuilder
+import akka.util.{ ByteStringBuilder, ByteString }
+
+import apollo.protocol._
 
 trait CassandraMarshal[T] {
 
@@ -15,7 +17,8 @@ trait DefaultCassandraMarshal {
   implicit object stringMarshal extends CassandraMarshal[String] {
     
     def put(bsb: ByteStringBuilder, value: String) =
-      bsb.putBytes(value.getBytes("UTF-8"))
+      BodyWriter.putBytes(bsb, Some(ByteString(value, "UTF-8")))
+
   }
 
 }
