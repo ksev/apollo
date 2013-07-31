@@ -11,15 +11,15 @@ import akka.util.Timeout
 
 case object ConnectionRequest
 
-class ConnectionPool(minConnections: Int, maxConnections: Int, cfg: Config) extends Actor {
+class ConnectionPool(connectionsPerHost: Int, cfg: Config) extends Actor {
 
   import akka.io.Tcp._
 
   val log = Logging(context.system, this)
   val addr = new InetSocketAddress(cfg.getString("hostname"), cfg.getInt("port"))
 
-  val connections = scala.collection.mutable.Queue.empty[ActorRef]
   val waiting = scala.collection.mutable.Queue.empty[ActorRef] 
+  val connections = scala.collection.mutable.Queue.empty[ActorRef]
 
   def makeConnection(i: Int) = {
     val ref = context.system.actorOf(Props(classOf[Connection], addr, self, cfg), "apollo-connection")
@@ -27,7 +27,7 @@ class ConnectionPool(minConnections: Int, maxConnections: Int, cfg: Config) exte
     ref
   }
 
-  (1 to minConnections) foreach makeConnection
+  (1 to connectionsPerHost) foreach makeConnection
 
   def receive = {
   
@@ -65,7 +65,7 @@ class ConnectionPool(minConnections: Int, maxConnections: Int, cfg: Config) exte
      */ 
     case Terminated(con) =>
       connections.dequeueAll(_ == con)
-      (1 to (minConnections - connections.length)) foreach makeConnection
+      (1 to (connectionsPerHost - connections.length)) foreach makeConnection
 
   }
 

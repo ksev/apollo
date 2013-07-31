@@ -17,7 +17,7 @@ class ClusterTests extends FunSuite with BeforeAndAfterAll {
   implicit var ec: ExecutionContext = _
 
   val cfg = ConfigFactory.load()
-  lazy val ses: Session = new Cluster(cfg).session()
+  lazy val clu = new Cluster(cfg)
 
   override def beforeAll {
     sys = ActorSystem("cluster-test")
@@ -37,8 +37,8 @@ class ClusterTests extends FunSuite with BeforeAndAfterAll {
     """
 
     val schema = for {
-      _ <- ses.exec[SchemaChange](cqlKS)
-      _ <- ses.exec[SchemaChange](cqlTBL)
+      _ <- clu.exec[SchemaChange](cqlKS)
+      _ <- clu.exec[SchemaChange](cqlTBL)
     } yield ()
 
     Await.result(schema, 2 seconds)
@@ -49,19 +49,19 @@ class ClusterTests extends FunSuite with BeforeAndAfterAll {
       DROP KEYSPACE test;
     """
 
-    Await.result(ses.exec[SchemaChange](cqlDKS), 2 seconds)
+    Await.result(clu.exec[SchemaChange](cqlDKS), 2 seconds)
     sys.shutdown()
   }
 
   test("Options") {
-    Await.result(ses.options(), 2 seconds)
+    Await.result(clu.options(), 2 seconds)
   }
 
   test("Query with params") {
     val crd = for {
-      _ <- ses.exec[Void]("INSERT INTO test.user (username, email) VALUES (?, ?)", "ksev", "kim@pixlr.com")
-      _ <- ses.exec[Rows]("SELECT * FROM test.user WHERE username = ?", "ksev")
-      _ <- ses.exec[Void]("DELETE FROM test.user WHERE username = ?", "ksev")
+      _ <- clu.exec[Void]("INSERT INTO test.user (username, email) VALUES (?, ?)", "ksev", "kim@pixlr.com")
+      _ <- clu.exec[Rows]("SELECT * FROM test.user WHERE username = ?", "ksev")
+      _ <- clu.exec[Void]("DELETE FROM test.user WHERE username = ?", "ksev")
     } yield ()
 
     Await.result(crd, 2 seconds)
