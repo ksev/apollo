@@ -27,7 +27,7 @@ case class Frame(
     builder.result()
   }
 
-  def toResponse[T : ResponseReader]: T = {
+  def toResponse[T <: Response : ResponseReader]: T = {
     assert(version == Version.V2RESPONSE)
     implicitly[ResponseReader[T]].read(this)
   }

@@ -2,20 +2,22 @@ package apollo
 
 import apollo.protocol._
 
-case class Supported(value: Map[String, Vector[String]])
-case class Error(code: Int, message: String) extends Throwable {
+trait Response
+case class Supported(value: Map[String, Vector[String]]) extends Response
+case class Error(code: Int, message: String) extends Throwable with Response {
 
   override def getMessage = f"$code%x: $message%s"
 
 }
-case class Ready()
-case class Void()
-case class Rows()
-case class SetKeyspace(keyspace: String)
-case class Prepared()
-case class SchemaChange()
+trait Result extends Response
+case class Ready() extends Result
+case class Void() extends Result
+case class Rows() extends Result
+case class SetKeyspace(keyspace: String) extends Result
+case class Prepared() extends Result
+case class SchemaChange() extends Result
 
-trait ResponseReader[T] {
+trait ResponseReader[T <: Response] {
 
   def read(frm: Frame): T
 

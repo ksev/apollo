@@ -45,7 +45,7 @@ class Cluster(config: Config)(implicit sys: ActorSystem) {
     else Future.failed(frame.toResponse[apollo.Error])
 
   /* Lowest level request function */
-  def request[T : ResponseReader](req: Request): Future[T] =
+  def request[T <: Response : ResponseReader](req: Request): Future[T] =
     for { 
       con <- (pool ? ConnectionRequest).mapTo[ActorRef]
       frm <- (con ? req.toFrame).mapTo[Frame].flatMap(checkFailure)
@@ -66,7 +66,7 @@ class Cluster(config: Config)(implicit sys: ActorSystem) {
 
   /** Execute a query against cassandra
     */
-  def exec[T : ResponseReader](query: String, params: CassandraValue[_]*): Future[T] =
+  def exec[T <: Result : ResponseReader](query: String, params: CassandraValue[_]*): Future[T] =
     request[T](ParamQueryUnbounded(query)(params : _*))
 
 }
