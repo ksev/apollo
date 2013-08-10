@@ -1,6 +1,7 @@
-echo "Starting bootstraping script"
-
 HOME="/home/vagrant"
+[ -f "$HOME/.bootstrapped" ] && exit
+
+echo "Starting bootstraping script for first time setup"
 
 JDK_NAME="jdk1.7.0_25"
 JDK_URL="http://download.oracle.com/otn-pub/java/jdk/7u25-b15/jdk-7u25-linux-x64.tar.gz"
@@ -50,5 +51,7 @@ cd $HOME
 echo "Setting up Cassandra cluster"
 
 ccm create -vnodes --nodes 3 --cassandra-version 2.0.0-beta2 apollo
+
+touch $HOME/.bootstrapped
 
 echo "DONE"
