@@ -44,7 +44,10 @@ class Cluster(config: Config)(implicit sys: ActorSystem) {
     if (frame.opcode != Opcode.ERROR) Future.successful(frame)
     else Future.failed(frame.toResponse[apollo.Error])
 
-  /* Lowest level request function */
+  /** Lowest level request function 
+    * @param req The request to send
+    * @return A future with a response
+    * */
   def request[T <: Response : ResponseReader](req: Request): Future[T] =
     for { 
       con <- (pool ? ConnectionRequest).mapTo[ActorRef]
